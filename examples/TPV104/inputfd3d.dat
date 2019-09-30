@@ -1,0 +1,9 @@
+400 100 200       \* Number of grid points in x,y,z direction (FD) *\
+100.0            \* Grid size in meters (FD) *\
+6000             \* Number of time step (FD) *\
+0.002            \* Time step in seconds (FD) *\
+0. -0.           \* Dip, topdepth (km) JE LEPSI HO MIT O 2*DH MENSI NEZ V WAVEQLAB *\
+10 6000.0 28.		\* PML layer thickness, PML damping *\
+0.3		\* damping near fault *\
+0
+

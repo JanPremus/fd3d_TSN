@@ -1,0 +1,10 @@
+0              ! 0=forward calculation, 1=start inversion, 2=restart inversion
+13 7           ! Number of model parameters (discretization)
+-123           ! Random seed
+0              ! Calculate waveforms? Reset to 1 if running inversion
+-1.e9    1.e9  ! T0 constraint (min, max)
+ 0.      1.e9  ! TS constraint (min, max)
+ 0.01    5.    ! Dc constraint (min, max)
+1  12000. 6000.  3000. 0. ! Constraint on nucleation (1=yes, 0=no), Nucl position (along strike, dip), Radius
+1 .02 .02  0.02     ! StepType (1=log-normal, 2=normal), StepSize of stress (fraction or MPa, resp.) and Dc (fraction or m, resp.)
+0.05           ! Data uncertainty (sigma in m)

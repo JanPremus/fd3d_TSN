@@ -1,0 +1,16 @@
+15000.0 7500.0 15000.0 7500.0 3000.0 5000.0	//wfx,wfz, hx0t, hz0t, trans, fringe
+0.6	//f0ini
+1e-6	//v0ini
+0.01	//a0ini
+0.014	//bini
+0.4	//d0h
+0.2	//fwini
+0.1	//vw0ini
+0.9	//vwdeltaini
+0.5e-16	//vini
+40e6	//Tini
+120e6	//Snini
+45.e6	//perturb
+3000.	//RR2
+1.	//TT2
+0.	0.
