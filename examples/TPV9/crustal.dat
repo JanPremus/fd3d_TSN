@@ -1,0 +1,6 @@
+Crustal model (free format) AQA bez hornich vrstvicek
+number of layers
+  1
+Parameters of the layers
+depth of layer top(km)   Vp(km/s)    Vs(km/s)    Rho(g/cm**3)    Qp     Qs
+0.000 5.716 3.300 2.700 800. 400.

@@ -34,8 +34,13 @@ benchmarks (Harris et al., 2019) - fast velocity weakening friction law with het
 	- Copy all source files into the folder TPV104 (compiler flags -DFWV -DSCEC and -DTPV104 are set in the file to properly set up the friction law and run the benchmark)
 	- Run compile.sh for compiling the code
 	- Run fd3d_pt_CPU_TSN for the simulation
+TPV9 benchmark - One of the community SCEC/USGS Spontaneous Rupture Code Verification Project (http://scecdata.usc.edu/cvws/)
+benchmarks (Harris et al., 2019) - fast velocity weakening friction law with heterogenous traction
+	- Copy all source files into the folder TPV104 (compiler flags -DSCEC and -DTPV9 are set in the file to properly set up the friction law and run the benchmark)
+	- Run compile.sh for compiling the code
+	- Run fd3d_pt_CPU_TSN for the simulation
 
-Commentary in compile.sh files contains a line to compile the GPU accelerated version. For that uncomment the line starting pgfortran ... and comment the line ifort ... .
+Commentary in compile.sh files contains a line to compile the GPU accelerated version. 
 Switching between slip weakening (default) and fast velocity weakening friction is done using compiler flag -DFVW.
 There are several outputs in the folder result:
 	- sliprateX.res, sliprateZ.res - time histories of horizontal and vertical slip rate at all on fault nodes.
@@ -47,3 +52,5 @@ There are several outputs in the folder result:
 	- Two MATLAB/OCTAVE files are provided to see the results
 		- PrintSnapshot.m - prints graph of spatial distribution of slip rate and traction at a given time T
 		- PrintTimeSeries.m - prints time series of slip rate and traction at a given node
+Further documentation is provided in the doc folder. File FD3D_TSN Theoretical background describes the implementation of the finite difference method and boundary conditions, 
+while FD3D_TSN Using the code describes input/output files and compilation options. 

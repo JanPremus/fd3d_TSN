@@ -6,7 +6,7 @@
 
 [ ! -d result ] && mkdir result
 
-D_MACRO=' -DFVW -DSCEC -DTPV104'
+D_MACRO=' -DSCEC -DTPV5'
 SRC_FILES='fd3d_init.f90 fd3d_deriv.f90 fd3d_theo.f90 dynamicsolver.f90'
 
 PFC=pgfortran
