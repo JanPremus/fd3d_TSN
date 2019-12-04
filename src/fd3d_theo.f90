@@ -360,7 +360,7 @@
 
             distX(i,k) = distX(i,k)  - 2*u1out*dt
             SCHANGEX(I,K) = friction
-            sliprateoutX(i,k) = - 2.*U1(I,NYSC,K)
+            sliprateoutX(i,k) = (-2.*U1(I,NYSC,K)-2.*U1(I+1,NYSC,K)-2.*U1(I,NYSC,K+1)-2.*U1(I+1,NYSC,K+1))/4.
             
 #else
             if (distX(i,k).le.Dc(i,k)) then
@@ -445,12 +445,12 @@
         !$ACC END DATA
         if(ioutput.eq.1) then
 #if defined FVW
-!          WRITE(24) psiout(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+          WRITE(24) psiout(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
 #endif
- !         WRITE(25) sliprateoutZ(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
-  !        WRITE(27) sliprateoutX(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
-   !       WRITE(26) SCHANGEZ(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
-    !      WRITE(28) SCHANGEX(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+          WRITE(25) sliprateoutZ(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+          WRITE(27) sliprateoutX(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+          WRITE(26) SCHANGEZ(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+          WRITE(28) SCHANGEX(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
     !     write(29) v1t(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
           do i=1,Nstations
             write (30+i,*)seisU(i),seisV(i),seisW(i)
@@ -568,7 +568,7 @@
           output_param(2) = output_param(2) + sqrt(slipX(i,k)**2 + slipZ(i,k)**2)*mu1(i,nysc,k)*(dh*dh)
           ! --- Stress drop:
           
-          numer = numer + sqrt((schangeZ(i,k)*slipZ(i,k))**2+(schangeX(i,k)*slipX(i,k))**2)
+          numer = numer + schangeZ(i,k)*slipZ(i,k)+schangeX(i,k)*slipX(i,k)	!correct only for pure dipslip/strikeslip
           denom = denom + sqrt(slipX(i,k)**2 + slipZ(i,k)**2)
           if (denom .ne. 0.0) then
             output_param(4) = -(numer/denom)

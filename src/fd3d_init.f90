@@ -185,7 +185,7 @@
 #endif
       
       allocate(ruptime(nxt,nzt),slipZ(nxt,nzt),slipX(nxt,nzt),rise(nxt,nzt),schangeZ(nxt,nzt),schangeX(nxt,nzt),sliptime(nxt,nzt))
-      T0X=0.;T0Z=0.;
+
     ! strinix=0.;peak_xz=0.;Dc=0.
 
 

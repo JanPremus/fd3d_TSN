@@ -2881,8 +2881,8 @@
       USE friction_com
       USE fd3dparam_com
       
-      peakX=0.;DcX=0.;dynX=0.
-      peakZ=0.;DcZ=0.;dynZ=0.
+      peakX=0.;DcX=0.;dynX=0.;T0X=0.
+      peakZ=0.;DcZ=0.;dynZ=0.;T0Z=0.
       
       do i=1,nxt
         do k=1,nzt
