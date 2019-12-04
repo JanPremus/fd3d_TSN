@@ -6,3 +6,4 @@
 10 6000. 25.      \* nabc, vp, pml_fact *\
 0.3               \* damp_s *\
 0		  \* number of seismic stations
+0

@@ -32,19 +32,20 @@
       IMPLICIT NONE
 
       real    :: time,friction,tmax,xmax,ymax,numer,denom,veltest,dd
-      integer :: incrack(nxt,nzt),broken(nxt,nzt),nsurf, brokenX(nxt,nzt),brokenZ(nxt,nzt)
+      integer :: incrack(nxt,nzt),nsurf
       real    :: pdx, pdz,tabs
-      real    :: u1out,sliprateoutX(nxt,nzt),sliprateoutZ(nxt,nzt),distX(nxt,nzt)
+      real    :: u1out,sliprateoutX(nxt,nzt),sliprateoutZ(nxt,nzt)
       real    :: CPUT1,CPUT2
       REAL    :: maxvelX,maxvelZ,maxvelsave,tint, tint2
       real    :: dht, ek, es, ef, c1, c2
       integer :: i,j,it,k, nxe, nxb, nyb, nye, nzb, nze
       integer :: ifrom,ito,jfrom,jto,kk
       real    :: rup_tresh, rv, cz
+	  real    :: distX(nxt,nzt), distZ(nxt,nzt)
 #if defined FVW
       real    :: fss, flv, psiss, dpsi,  sr
       real    :: FXZ, GT, hx, hz, rr,AA,BB
-      real    :: psiout(nxt,nzt), distX(nxt,nzt), distZ(nxt,nzt)
+      real    :: psiout(nxt,nzt)
 #endif
 !---------------------------
 ! Write down the input
@@ -52,13 +53,23 @@
 
       if (ioutput.eq.1) then
 #if defined FVW
+        open(95,file='result/vmodel.inp')
+        open(96,file='result/friction.inp')
+        do k = nabc+1,nzt-nfs
+          do i = nabc+1,nxt-nabc
+            write(95,*) mu1(i,nysc,k)
+            write(96,'(5E13.5)') T0X(i,k),T0Z(i,k)
+          enddo
+        enddo
+        close(95)
+        close(96)
 #else
         open(95,file='result/vmodel.inp')
         open(96,file='result/friction.inp')
         do k = nabc+1,nzt-nfs
           do i = nabc+1,nxt-nabc
             write(95,*) mu1(i,nysc,k)
-            write(96,'(5E13.5)') striniX(i,k),striniZ(i,k),peak_xz(i,k),Dc(i,k),peak_xz(i,k)/normstress(k)
+            write(96,'(5E13.5)') T0X(i,k),T0Z(i,k),peak_xz(i,k),Dc(i,k),peak_xz(i,k)/normstress(k)
           enddo
         enddo
         close(95)
@@ -89,7 +100,7 @@
       u1=0.; v1=0.; w1=0.
       xx=0.; yy=0.; zz=0.; xy=0.; yz=0.; xz=0.
       ruptime=1.e4; rise=0.; sliptime=1.e4
-      broken=0;incrack=0
+      incrack=0
       tx=0.; tz=0.; v1t=0.
       uZ=0.; wX=0.
       avdx = 0.; avdz = 0.
@@ -98,18 +109,17 @@
       MSRX=0.; MSRZ=0.; MomentRate=0.
       distX=0.; distZ=0.
       rup_tresh=1.e-3 !	Rate treshold for rupture time calculation
-      brokenX=0; brokenZ=0
       c1  = 9./8. !	4th order central FD formula parameters	
       c2  = -1./24.
       tabsX=0.; tabsZ=0.
       sliprateoutZ=0.; sliprateoutX=0.
       SCHANGEZ=0.; SCHANGEX=0.
-      tabs=0.; distX=0.; distZ=0.
+      tabs=0.; 
 	  slipX=0.; slipZ=0.
 	!  waveU=0.; waveV=0.; waveW=0.
 #if defined FVW
-      tabsX=striniX
-      tabsZ=striniX
+      tabsX=1.
+      tabsZ=1.
       psiout=0.
 #endif
       dht = dh/dt
@@ -158,7 +168,7 @@
       !$ACC      COPYIN (omegaz1,omegaz2,omegaz3,omegaz4) &
       !$ACC      COPYIN (omegaxS1,omegaxS2,omegaxS3,omegaxS4) &
       !$ACC      COPYIN (omegayS3,omegayS4,omegazS4) &
-      !$ACC      COPYIN (broken,brokenX,brokenZ,dyn_xz,striniZ,striniX,peak_xz,Dc,coh,tabsX,tabsZ) &
+      !$ACC      COPYIN (dyn_xz,striniZ,striniX,peak_xz,Dc,coh,tabsX,tabsZ, T0X, T0Z) &
       !$ACC      COPYIN (peakX, dynX, DcX, peakZ, dynZ, DcZ,staX,staY,staZ, distX, distZ) &
 #if defined FVW
       !$ACC      COPYIN (aX,bX,psiX,vwX,aZ,bZ,psiZ,vwZ)&
@@ -273,10 +283,10 @@
         _ACC_LOOP_COLLAPSE_2
         do k = nabc+1,nzt-nfs
           do i = nabc+1,nxt-nabc
-            tint=(tx(i,k)+striniX(i,k)+tx(i+1,k)+striniX(i+1,k)+tx(i,k+1)+striniX(i,k+1)+tx(i+1,k+1)+striniX(i+1,k+1))/4.
-            tabsZ(i,k) = sqrt(tint**2 + (tz(i,k)+striniZ(i,k))**2)
-            tint=(tz(i,k)+striniZ(i,k)+tz(i-1,k)+striniZ(i-1,k)+tz(i,k-1)+striniZ(i,k-1)+tz(i-1,k-1)+striniZ(i-1,k-1))/4.
-            tabsX(i,k) = sqrt((tx(i,k)+striniX(i,k))**2 + (tint)**2)
+            tint=(tx(i,k)+T0X(i,k)+tx(i+1,k)+T0X(i+1,k)+tx(i,k+1)+T0X(i,k+1)+tx(i+1,k+1)+T0X(i+1,k+1))/4.
+            tabsZ(i,k) = sqrt(tint**2 + (tz(i,k)+T0Z(i,k))**2)
+            tint=(tz(i,k)+T0Z(i,k)+tz(i-1,k)+T0Z(i-1,k)+tz(i,k-1)+T0Z(i,k-1)+tz(i-1,k-1)+T0Z(i-1,k-1))/4.
+            tabsX(i,k) = sqrt((tx(i,k)+T0X(i,k))**2 + (tint)**2)
           enddo
         enddo
         _ACC_END_PARALLEL
@@ -290,21 +300,21 @@
             u1out=-sqrt(W1(I,NYSC,K)**2+uZ(i,k)**2)
 
 #if defined FVW
+
             sr=sqrt((2.*(abs(w1(i,nysc,k))+abs(wini)))**2+(2.*(abs(uZ(i,k))+abs(uini)))**2)
+			
             flv = f0 - (bZ(i,k) - aZ(i,k))*log(sr/v0)
             fss = fw + (flv - fw)/((1. + (sr/vwZ(i,k))**8)**(1./8.))
             psiss = aZ(i,k)*(log(sinh(fss/aZ(i,k))) + log(2*v0/(sr))) 
             psiZ(i,k)=(psiZ(i,k)-psiss)*exp(-sr*dt/Dc(i,k)) + psiss
             friction  = Sn * aZ(i,k)*asinh(sr*exp(psiZ(i,k)/aZ(i,k))/(2*v0)) 
             distZ(i,k) = distZ(i,k)  - 2*u1out*dt
-            brokenZ(i,k)=1
             SCHANGEZ(I,K) = friction
             sliprateoutZ(i,k) = - 2.*W1(I,NYSC,K)
             psiout(i,k)=psiZ(i,k)
 			if (abs(2*u1out)>rup_tresh) then
                 if (ruptime(i,k).ne.1.e4) rise(i,k) = time
                 if (ruptime(i,k).eq.1.e4) ruptime(i,k) = time
-                broken(i,k)=1
             endif
 #else
             if (distZ(i,k).le.DcZ(i,k)) then
@@ -315,19 +325,19 @@
             
             if (tabs .ge. friction) then
               distZ(i,k) = distZ(i,k)  - 2*u1out*dt
-              tz(i,k) =  (tz(i,k) + striniZ(i,k))*friction/tabs - striniZ(i,k)
-              brokenZ(i,k)=1
+              tz(i,k) =  (tz(i,k) + T0Z(i,k))*friction/tabs - T0Z(i,k)
 
               if (-2*u1out>rup_tresh) then
                 if (ruptime(i,k).ne.1.e4) rise(i,k) = time
                 if (ruptime(i,k).eq.1.e4) ruptime(i,k) = time
-                broken(i,k)=1
               endif
             endif
-            SCHANGEZ(I,K) = tz(i,k) + striniZ(i,k)
+            SCHANGEZ(I,K) = tz(i,k) + T0Z(i,k)
             sliprateoutZ(i,k) = - 2.*W1(I,NYSC,K)
 #endif
-            slipZ(i,k)=slipZ+sliprateoutZ(i,k)*dt
+            slipZ(i,k)=slipZ(i,k)+sliprateoutZ(i,k)*dt
+            slipX(i,k)=slipX(i,k)-2*uZ(i,k)*dt
+
             if ((sliptime(i,k)==1.e4).AND.(distZ(i,k)>Dc(i,k))) sliptime(i,k)=time
           enddo
         enddo
@@ -342,6 +352,7 @@
             u1out=-sqrt(wX(i,k)**2+U1(I,NYSC,K)**2)
             
 #if defined FVW
+			
             sr=sqrt((2.*(abs(wX(i,k))+abs(wini)))**2+(2.*(abs(u1(i,nyt,k))+abs(uini)))**2)
             flv = f0 - (bX(i,k) - aX(i,k))*log(sr/v0)
             fss = fw + (flv - fw)/((1. + (sr/vwX(i,k))**8)**(1./8.))
@@ -350,7 +361,6 @@
             friction  = Sn * aX(i,k)*asinh(sr*exp(psiX(i,k)/aX(i,k))/(2*v0)) 
 
             distX(i,k) = distX(i,k)  - 2*u1out*dt
-            brokenX(i,k)=1
             SCHANGEX(I,K) = friction
             sliprateoutX(i,k) = - 2.*U1(I,NYSC,K)
             
@@ -363,13 +373,12 @@
             
             if (tabs .ge. friction) then
               distX(i,k) = distX(i,k)  - 2*u1out*dt
-              tx(i,k) = (tx(i,k) + striniX(i,k))*friction/tabs - striniX(i,k)
-              brokenX(i,k)=1
+              tx(i,k) = (tx(i,k) + T0X(i,k))*friction/tabs - T0X(i,k)
             endif
-            SCHANGEX(I,K) = (tx(i,k)+striniX(i,k)+tx(i+1,k)+striniX(i+1,k)+tx(i,k+1)+striniX(i,k+1)+tx(i+1,k+1)+striniX(i+1,k+1))/4.
+            SCHANGEX(I,K) = (tx(i,k)+T0X(i,k)+tx(i+1,k)+T0X(i+1,k)+tx(i,k+1)+T0X(i,k+1)+tx(i+1,k+1)+T0X(i+1,k+1))/4.
             sliprateoutX(i,k) = (-2.*U1(I,NYSC,K)-2.*U1(I+1,NYSC,K)-2.*U1(I,NYSC,K+1)-2.*U1(I+1,NYSC,K+1))/4.
 #endif 
-            slipX(i,k)=slipX+sliprateoutX(i,k)*dt
+
           enddo
         enddo
         _ACC_END_PARALLEL
@@ -426,7 +435,7 @@
               else
                 FXZ = 0.
               endif
-              strinix(i,k) = strinixI + perturb*FXZ*GT
+              T0X(i,k) = strinixI + perturb*FXZ*GT
 
             enddo
           enddo
@@ -496,8 +505,8 @@
     
       !$ACC END DATA
 
-      SCHANGEZ(:,:)=SCHANGEZ(:,:)-striniZ(:,:)   !stress drop
-      SCHANGEX(:,:)=SCHANGEX(:,:)-striniX(:,:)
+      SCHANGEZ(:,:)=SCHANGEZ(:,:)-T0Z(:,:)   !stress drop
+      SCHANGEX(:,:)=SCHANGEX(:,:)-T0X(:,:)
       
       deallocate(u1,v1,w1)
       deallocate(xx,yy,zz,xy,yz,xz)
@@ -629,8 +638,8 @@
                 if (rv.ne.0.) then
                   rv=2*dh/(sqrt((ruptime(i+1,k)-ruptime(i,k))**2+(ruptime(i,k+1)-ruptime(i,k))**2) &
                     +sqrt((ruptime(i,k)-ruptime(i-1,k))**2+(ruptime(i,k)-ruptime(i,k-1))**2))
-                  tint=tint+rv*distZ(i,k)
-                  tint2=tint2+distZ(i,k)
+                  tint=tint+rv*sqrt(slipX(i,k)**2+slipZ(i,k)**2)
+                  tint2=tint2+sqrt(slipX(i,k)**2+slipZ(i,k)**2)
                 else
                   rv = 0.
                 endif

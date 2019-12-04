@@ -1114,7 +1114,7 @@
       USE traction_com
       USE pml_com
 #if defined FVW
-      USE friction_com, only: Sn, psiX, v0, uini,wini, aX,striniZ,striniX,wX, tabsX
+      USE friction_com, only: Sn, psiX, v0, uini,wini, aX,T0Z,T0X,wX, tabsX
 #endif
 !u component at the fault
 
@@ -1143,8 +1143,8 @@
           sr = sqrt((2.*(abs(wX(i,k))+abs(wini)))**2+(2.*(abs(u1(i,nyt,k))+abs(uini)))**2)
           cdelta = 2.*(dth/d)*Sn*aX(i,k)
           uw = asinh(exp(psiX(i,k)/aX(i,k))*sr/(2*v0))
-          vtilde=-sqrt((wX(i,k) + 2.*(dth/d)*((RFz(i,k)+RFz(i-1,k)+RFz(i,k-1)+RFz(i-1,k-1))/4.-striniZ(i,k)))**2 &
-            +(u1(i,nyt,k) +2.*(dth/d)*(RFx(i,k)-striniX(i,k)))**2)
+          vtilde=-sqrt((wX(i,k) + 2.*(dth/d)*((RFz(i,k)+RFz(i-1,k)+RFz(i,k-1)+RFz(i-1,k-1))/4.-T0Z(i,k)))**2 &
+            +(u1(i,nyt,k) +2.*(dth/d)*(RFx(i,k)-T0X(i,k)))**2)
           ferr = 10.
           j = 0
           jmax=100
@@ -1155,11 +1155,11 @@
             ferr = fw/dfw
             uw = uw - ferr
             if (jmax<j)then
-              print*, 'newton error?', (tx(i,k) + striniX(i,k))*(-sinh(uw))*v0*exp(-psiX(i,k)/aX(i,k))/tabsX(i,k) - uini, ferr, i, k
+              print*, 'newton error?', (tx(i,k) + T0X(i,k))*(-sinh(uw))*v0*exp(-psiX(i,k)/aX(i,k))/tabsX(i,k) - uini, ferr, i, k
             ! pause
             endif
           enddo
-          u1(i,nyt,k)= (tx(i,k) + striniX(i,k))*(-sinh(uw))*v0*exp(-psiX(i,k)/aX(i,k))/tabsX(i,k) + uini
+          u1(i,nyt,k)= (tx(i,k) + T0X(i,k))*(-sinh(uw))*v0*exp(-psiX(i,k)/aX(i,k))/tabsX(i,k) + uini
 #else
           u1(i,nyt,k) = u1(i,nyt,k) + (dth/d)*2*(tx(i,k) + RFx(i,k))
 #endif
@@ -1180,7 +1180,7 @@
       USE traction_com
       USE pml_com
 #if defined FVW
-      USE friction_com, only: Sn, psiZ, v0, wini, uini,aZ,striniZ,striniX,uZ,tabsZ
+      USE friction_com, only: Sn, psiZ, v0, wini, uini,aZ,T0Z,T0X,uZ,tabsZ
 #endif
 !w component at the fault
 
@@ -1206,9 +1206,9 @@
           sr = sqrt((2.*(w1(i,nyt,k)-wini))**2+(2.*(uZ(i,k)-uini))**2)
           cdelta = 2.*(dth/d)*Sn*aZ(i,k)
           uw = asinh(exp(psiZ(i,k)/aZ(i,k))*sr/(2*v0))
-          vtilde=-sqrt((w1(i,nyt,k) + 2.*(dth/d)*(RFz(i,k)-striniZ(i,k)))**2 &
+          vtilde=-sqrt((w1(i,nyt,k) + 2.*(dth/d)*(RFz(i,k)-T0Z(i,k)))**2 &
             +(uZ(i,k) +2.*(dth/d)*((RFx(i,k)+RFx(i+1,k)+RFx(i,k+1)+RFx(i+1,k+1))/4.&
-			-(striniX(i,k)+striniX(i+1,k)+striniX(i,k+1)+striniX(i+1,k+1))/4.))**2)
+			-(T0X(i,k)+T0X(i+1,k)+T0X(i,k+1)+T0X(i+1,k+1))/4.))**2)
           ferr = 10.
           j = 0
           jmax=100
@@ -1219,11 +1219,11 @@
             ferr = fw/dfw
             uw = uw - ferr
             if (jmax<j) then
-              print*, 'newton error?', (tz(i,k) + striniZ(i,k))*(- sinh(uw)*v0*exp(-psiZ(i,k)/aZ(i,k)))/tabsZ(i,k) - wini, ferr,i,k
+              print*, 'newton error?', (tz(i,k) + T0Z(i,k))*(- sinh(uw)*v0*exp(-psiZ(i,k)/aZ(i,k)))/tabsZ(i,k) - wini, ferr,i,k
               !pause
             endif
           enddo
-          w1(i,nyt,k)= (tz(i,k) + striniZ(i,k))*(- sinh(uw)*v0*exp(-psiZ(i,k)/aZ(i,k)))/tabsZ(i,k) + wini
+          w1(i,nyt,k)= (tz(i,k) + T0Z(i,k))*(- sinh(uw)*v0*exp(-psiZ(i,k)/aZ(i,k)))/tabsZ(i,k) + wini
 #else
           w1(i,nyt,k) = w1(i,nyt,k) + (dth/d)*(2*(tz(i,k) + RFz(i,k)))
 #endif
@@ -2891,10 +2891,12 @@
           bZ(i,k)=b(i,k)
           psiZ(i,k)=psi(i,k)
           vwZ(i,k)=vw(i,k)
+		  T0Z(i,k)=striniZ(i,k)
 #else
           peakZ(i,k)=peak_xz(i,k)
           dynZ(i,k)=dyn_xz(i,k)
           DcZ(i,k)=Dc(i,k)
+		  T0Z(i,k)=striniZ(i,k)
 #endif
         enddo
       enddo
@@ -2906,11 +2908,12 @@
           ! bX(i,k)=(bZ(i,k)+bZ(i-1,k)+bZ(i,k-1)+bZ(i-1,k-1))/4.
           ! psiX(i,k)=(psiZ(i,k)+psiZ(i-1,k)+psiZ(i,k-1)+psiZ(i-1,k-1))/4.
           ! vwX(i,k)=(vwZ(i,k)+vwZ(i-1,k)+vwZ(i,k-1)+vwZ(i-1,k-1))/4.
+		  T0X(i,k)=(striniX(i,k)+striniX(i-1,k)+striniX(i,k-1)+striniX(i-1,k-1))/4.
 #else
           peakX(i,k)=(peakZ(i,k)+peakZ(i-1,k)+peakZ(i,k-1)+peakZ(i-1,k-1))/4.
           dynX(i,k)=(dynZ(i,k)+dynZ(i-1,k)+dynZ(i,k-1)+dynZ(i-1,k-1))/4.
           DcX(i,k)=(DcZ(i,k)+DcZ(i-1,k)+DcZ(i,k-1)+DcZ(i-1,k-1))/4.
-		  striniX(i,k)=(striniX(i,k)+striniX(i-1,k)+striniX(i,k-1)+striniX(i-1,k-1))/4.
+		  T0X(i,k)=(striniX(i,k)+striniX(i-1,k)+striniX(i,k-1)+striniX(i-1,k-1))/4.
 #endif
         enddo
       enddo

@@ -6,17 +6,17 @@
 
 [ ! -d result ] && mkdir result
 
-D_MACRO=' -DSCEC -DTPV8'
-SRC_FILES='fd3d_init.f90 fd3d_deriv.f90 fd3d_theo.f90 dynamicsolver.f90'
+D_MACRO=' -DDIPSLIP -DSCEC -DTPV9 '
+SRC_FILES='fd3d_init.f90 fd3d_deriv.f90 fd3d_theo.f90  dynamicsolver.f90'
 
 PFC=pgfortran
-PFC_OPTS='-fast -Mpreprocess -r8 -acc -ta=tesla:ccall -ofd3d_pgi_TSN'
+PFC_OPTS='-fast -Mpreprocess -acc -ta=tesla:ccall -ofd3d_pgi_TSN'
 # PGI target-accelerator/processor flags: -acc -ta=tesla:ccall -ta=multicore -ta=host -tp=haswell -tp=skylake -mavx512f
 # PGI informational flags: -Minfo=accel -Mcuda=ptxinfo
 # PGI debugging flags: 
 # PGI environment variables: PGI_ACC_TIME, PGI_ACC_NOTIFY, ACC_NUM_CORES, ACC_BIND
 
-GFC=gfortran-9
+GFC=gfortran-8
 GFC_OPTS='-Ofast -march=native -cpp -o fd3d_gnu_TSN'
 # gfortran accelerator/processor flags: -foffload=nvptx-none -fopenacc-dim=:4:32 -march=native
 # gfortran informational flags: -fopt-info-optimized-omp
@@ -25,7 +25,7 @@ GFC_OPTS='-Ofast -march=native -cpp -o fd3d_gnu_TSN'
 # gfortran-9 on Ubuntu: apt install gfortran-9 gcc-9-offload-nvptx
 
 IFC=ifort
-IFC_OPTS='-Ofast -autodouble -xHost -fpp -o fd3d_if_TSN'
+IFC_OPTS='-Ofast -xHost -fpp -o fd3d_if_TSN'
 # ifort processor flags: -xHost -xSKYLAKE-AVX512 -mtune=skylake-avx512
 
 echo $PFC...
