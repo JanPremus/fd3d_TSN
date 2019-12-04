@@ -32,7 +32,6 @@
       IMPLICIT NONE
 
       real    :: time,friction,tmax,xmax,ymax,numer,denom,veltest,dd
-      integer :: incrack(nxt,nzt),nsurf
       real    :: pdx, pdz,tabs
       real    :: u1out,sliprateoutX(nxt,nzt),sliprateoutZ(nxt,nzt)
       real    :: CPUT1,CPUT2
@@ -100,7 +99,6 @@
       u1=0.; v1=0.; w1=0.
       xx=0.; yy=0.; zz=0.; xy=0.; yz=0.; xz=0.
       ruptime=1.e4; rise=0.; sliptime=1.e4
-      incrack=0
       tx=0.; tz=0.; v1t=0.
       uZ=0.; wX=0.
       avdx = 0.; avdz = 0.
@@ -173,7 +171,7 @@
 #if defined FVW
       !$ACC      COPYIN (aX,bX,psiX,vwX,aZ,bZ,psiZ,vwZ)&
 #endif
-      !$ACC      COPY (incrack,ruptime,sliptime,slipZ,rise,slipX)   
+      !$ACC      COPY (ruptime,sliptime,slipZ,rise,slipX)   
 	  !, waveU, waveV, waveW)  
 
       !seisU,seisV,seisW  
@@ -447,12 +445,12 @@
         !$ACC END DATA
         if(ioutput.eq.1) then
 #if defined FVW
-          WRITE(24) psiout(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+!          WRITE(24) psiout(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
 #endif
-          WRITE(25) sliprateoutZ(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
-          WRITE(27) sliprateoutX(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
-          WRITE(26) SCHANGEZ(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
-          WRITE(28) SCHANGEX(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+ !         WRITE(25) sliprateoutZ(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+  !        WRITE(27) sliprateoutX(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+   !       WRITE(26) SCHANGEZ(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
+    !      WRITE(28) SCHANGEX(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
     !     write(29) v1t(nabc+1:nxt-nabc,nabc+1:nzt-nfs)
           do i=1,Nstations
             write (30+i,*)seisU(i),seisV(i),seisW(i)
@@ -561,22 +559,17 @@
       
       tmax            = -1.
       output_param(1) =  0.
-      nsurf           =  0
       output_param(2) =  0.
       numer           =  0.
       denom           =  0.
       do k = nabc+1,nzt-nfs	
         do i = nabc+1,nxt-nabc
-          ! --- Surface of rupture:
-          if (incrack(i,k).eq.1) nsurf = nsurf + 1
-          
-          output_param(3) = nsurf * (dh*dh)
           ! --- Seismic moment:
-          output_param(2) = output_param(2) + slipZ(i,k)*mu1(i,nysc,k)*(dh*dh)
+          output_param(2) = output_param(2) + sqrt(slipX(i,k)**2 + slipZ(i,k)**2)*mu1(i,nysc,k)*(dh*dh)
           ! --- Stress drop:
           
           numer = numer + sqrt((schangeZ(i,k)*slipZ(i,k))**2+(schangeX(i,k)*slipX(i,k))**2)
-          denom = denom + slipZ(i,k)
+          denom = denom + sqrt(slipX(i,k)**2 + slipZ(i,k)**2)
           if (denom .ne. 0.0) then
             output_param(4) = -(numer/denom)
           else
