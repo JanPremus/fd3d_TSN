@@ -46,47 +46,6 @@
       real    :: FXZ, GT, hx, hz, rr,AA,BB
       real    :: psiout(nxt,nzt)
 #endif
-!---------------------------
-! Write down the input
-!---------------------------
-
-      if (ioutput.eq.1) then
-#if defined FVW
-        open(95,file='result/vmodel.inp')
-        open(96,file='result/friction.inp')
-        do k = nabc+1,nzt-nfs
-          do i = nabc+1,nxt-nabc
-            write(95,*) mu1(i,nysc,k)
-            write(96,'(5E13.5)') T0X(i,k),T0Z(i,k)
-          enddo
-        enddo
-        close(95)
-        close(96)
-#else
-        open(95,file='result/vmodel.inp')
-        open(96,file='result/friction.inp')
-        do k = nabc+1,nzt-nfs
-          do i = nabc+1,nxt-nabc
-            write(95,*) mu1(i,nysc,k)
-            write(96,'(5E13.5)') T0X(i,k),T0Z(i,k),peak_xz(i,k),Dc(i,k),peak_xz(i,k)/normstress(k)
-          enddo
-        enddo
-        close(95)
-        close(96)
-#endif
-        if (nstations>0) then
-          open(31,file='result/stan0.txt')
-          open(32,file='result/stan1.txt')
-          open(33,file='result/stan2.txt')
-          open(34,file='result/stan3.txt')
-          open(35,file='result/stan4.txt')
-          open(36,file='result/stan5.txt')
-          open(37,file='result/stan6.txt')
-          open(38,file='result/stan7.txt')
-          open(39,file='result/stan8.txt')
-          open(40,file='result/stan9.txt')
-        endif 
-      endif
 !-------------------------------------------------------
 !   initialize arrays
 !-------------------------------------------------------
@@ -127,6 +86,46 @@
       call init_pml()
       call interp_fric()
 
+!---------------------------
+! Write down the input
+!---------------------------
+      if (ioutput.eq.1) then
+#if defined FVW
+        open(95,file='result/vmodel.inp')
+        open(96,file='result/friction.inp')
+        do k = nabc+1,nzt-nfs
+          do i = nabc+1,nxt-nabc
+            write(95,*) mu1(i,nysc,k)
+            write(96,'(5E13.5)') T0X(i,k),T0Z(i,k)
+          enddo
+        enddo
+        close(95)
+        close(96)
+#else
+        open(95,file='result/vmodel.inp')
+        open(96,file='result/friction.inp')
+        do k = nabc+1,nzt-nfs
+          do i = nabc+1,nxt-nabc
+            write(95,*) mu1(i,nysc,k)
+            write(96,'(5E13.5)') T0X(i,k),T0Z(i,k),peak_xz(i,k),Dc(i,k),peak_xz(i,k)/normstress(k)
+          enddo
+        enddo
+        close(95)
+        close(96)
+#endif
+        if (nstations>0) then
+          open(31,file='result/stan0.txt')
+          open(32,file='result/stan1.txt')
+          open(33,file='result/stan2.txt')
+          open(34,file='result/stan3.txt')
+          open(35,file='result/stan4.txt')
+          open(36,file='result/stan5.txt')
+          open(37,file='result/stan6.txt')
+          open(38,file='result/stan7.txt')
+          open(39,file='result/stan8.txt')
+          open(40,file='result/stan9.txt')
+        endif 
+      endif
 !-------------------------------------------------------
 !     Loop over time
 !-------------------------------------------------------
