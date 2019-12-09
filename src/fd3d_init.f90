@@ -186,7 +186,7 @@
       
       allocate(ruptime(nxt,nzt),slipZ(nxt,nzt),slipX(nxt,nzt),rise(nxt,nzt),schangeZ(nxt,nzt),schangeX(nxt,nzt),sliptime(nxt,nzt))
 
-    ! strinix=0.;peak_xz=0.;Dc=0.
+     striniX=0.; striniZ=0.; peak_xz=0.; Dc=0.
 
 
 !------------------------------------------------------------
@@ -677,7 +677,7 @@
     allocate(MSRX(NL*NW*ntfd),MSRZ(NL*NW*ntfd),MomentRate(ntfd))
     END SUBROUTINE
 
-    SUBROUTINE inversion_modeltofd3d() ! inversion from model controll points to fd3d grid
+    SUBROUTINE inversion_modeltofd3d() ! inversion from model control points to fd3d grid
     USE inversion_com
     USE fd3dparam_com
     USE friction_com

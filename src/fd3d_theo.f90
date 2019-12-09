@@ -308,7 +308,6 @@
             friction  = Sn * aZ(i,k)*asinh(sr*exp(psiZ(i,k)/aZ(i,k))/(2*v0)) 
             distZ(i,k) = distZ(i,k)  - 2*u1out*dt
             SCHANGEZ(I,K) = friction
-            sliprateoutZ(i,k) = - 2.*W1(I,NYSC,K)
             psiout(i,k)=psiZ(i,k)
 			if (abs(2*u1out)>rup_tresh) then
                 if (ruptime(i,k).ne.1.e4) rise(i,k) = time
@@ -330,11 +329,9 @@
                 if (ruptime(i,k).eq.1.e4) ruptime(i,k) = time
               endif
             endif
-            SCHANGEZ(I,K) = tz(i,k) + T0Z(i,k)
-            sliprateoutZ(i,k) = - 2.*W1(I,NYSC,K)
 #endif
-            slipZ(i,k)=slipZ(i,k)+sliprateoutZ(i,k)*dt
-            slipX(i,k)=slipX(i,k)-2*uZ(i,k)*dt
+            slipZ(i,k)=slipZ(i,k)-2.*W1(I,NYSC,K)*dt
+            slipX(i,k)=slipX(i,k)-2.*uZ(i,k)*dt
 
             if ((sliptime(i,k)==1.e4).AND.(distZ(i,k)>Dc(i,k))) sliptime(i,k)=time
           enddo
@@ -356,11 +353,10 @@
             fss = fw + (flv - fw)/((1. + (sr/vwX(i,k))**8)**(1./8.))
             psiss = aX(i,k)*(log(sinh(fss/aX(i,k))) + log(2*v0/(sr))) 
             psiX(i,k)=(psiX(i,k)-psiss)*exp(-sr*dt/Dc(i,k)) + psiss
-            friction  = Sn * aX(i,k)*asinh(sr*exp(psiX(i,k)/aX(i,k))/(2*v0)) 
-
+            friction  = Sn * aX(i,k)*asinh(sr*exp(psiX(i,k)/aX(i,k))/(2*v0)) 			
             distX(i,k) = distX(i,k)  - 2*u1out*dt
             SCHANGEX(I,K) = friction
-            sliprateoutX(i,k) = (-2.*U1(I,NYSC,K)-2.*U1(I+1,NYSC,K)-2.*U1(I,NYSC,K+1)-2.*U1(I+1,NYSC,K+1))/4.
+
             
 #else
             if (distX(i,k).le.Dc(i,k)) then
@@ -373,6 +369,26 @@
               distX(i,k) = distX(i,k)  - 2*u1out*dt
               tx(i,k) = (tx(i,k) + T0X(i,k))*friction/tabs - T0X(i,k)
             endif
+#endif 
+
+          enddo
+        enddo
+        _ACC_END_PARALLEL
+
+		
+        _ACC_PARALLEL
+        _ACC_LOOP
+        do k = nabc+1,nzt-nfs-1
+          do i = nabc+1,nxt-nabc
+            
+#if defined FVW
+			
+            sliprateoutX(i,k) = (-2.*U1(I,NYSC,K)-2.*U1(I+1,NYSC,K)-2.*U1(I,NYSC,K+1)-2.*U1(I+1,NYSC,K+1))/4.
+	        sliprateoutZ(i,k) = - 2.*W1(I,NYSC,K)
+            
+#else
+            SCHANGEZ(I,K) = tz(i,k) + T0Z(i,k)
+            sliprateoutZ(i,k) = - 2.*W1(I,NYSC,K)
             SCHANGEX(I,K) = (tx(i,k)+T0X(i,k)+tx(i+1,k)+T0X(i+1,k)+tx(i,k+1)+T0X(i,k+1)+tx(i+1,k+1)+T0X(i+1,k+1))/4.
             sliprateoutX(i,k) = (-2.*U1(I,NYSC,K)-2.*U1(I+1,NYSC,K)-2.*U1(I,NYSC,K+1)-2.*U1(I+1,NYSC,K+1))/4.
 #endif 
@@ -380,7 +396,29 @@
           enddo
         enddo
         _ACC_END_PARALLEL
+		
+		k=nzt-nfs
+		
+		_ACC_PARALLEL
+        _ACC_LOOP
+          do i = nabc+1,nxt-nabc
+            
+#if defined FVW
+			
+            sliprateoutX(i,k) = (-2.*U1(I,NYSC,K)-2.*U1(I+1,NYSC,K))/4.
+	        sliprateoutZ(i,k) = - 2.*W1(I,NYSC,K)
+            
+#else
+            SCHANGEZ(I,K) = tz(i,k) + T0Z(i,k)
+            sliprateoutZ(i,k) = - 2.*W1(I,NYSC,K)
+            SCHANGEX(I,K) = (tx(i,k)+T0X(i,k)+tx(i+1,k)+T0X(i+1,k))/2.
+            sliprateoutX(i,k) = (-2.*U1(I,NYSC,K)-2.*U1(I+1,NYSC,K))/2.
+#endif 
 
+          enddo
+        _ACC_END_PARALLEL
+		
+		
         if(ioutput.eq.1) then
         if (Nstations>0) then
         _ACC_PARALLEL
