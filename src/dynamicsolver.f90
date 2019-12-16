@@ -36,6 +36,7 @@
     call inversion_init()  !Reads GFs, observed waveforms
     
     write(*,*)'Running forward modeling:'
+
 #if defined SCEC
 #if defined TPV5
     CALL forwardspecialTPV5()
@@ -49,11 +50,17 @@
 #if defined TPV104
     CALL forwardspecialTPV104()
 #endif
+#if defined TPV103
+	print *, 'Running TPV103 benchmark' 
+    CALL forwardspecialTPV103()
+#endif
 #else
     print *,'reading forwardmodel.dat'
     CALL readinversionresult()
 #endif
-    ioutput=1
+
+	ioutput=1
+	
     write(*,*)'Running dynamic rupture simulation...'
 
     call fd3d()

@@ -40,7 +40,13 @@
       real,allocatable, dimension (:):: omegaz1,omegaz2,omegaz3,omegaz4
       real,allocatable, dimension (:):: omegaxS1,omegaxS2,omegaxS3,omegaxS4
       real,allocatable, dimension (:):: omegayS3,omegayS4
-      real,allocatable, dimension (:):: omegazS4     
+      real,allocatable, dimension (:):: omegazS4 
+#if defined FSPACE
+      real,allocatable, dimension (:,:,:):: u51,u52,u53,v51,v52,v53,w51,w52,w53
+	  real,allocatable, dimension (:,:,:):: xx51,xx52,xx53,yy51,yy52,yy53,zz51,zz52,zz53
+	  real,allocatable, dimension (:,:,:):: xy51,xy52,xz51,xz52,yz51,yz52
+	  real,allocatable, dimension (:):: omegax5,omegay5,omegaz5,omegaxS5,omegayS5,omegazS5 
+#endif	  
     END MODULE
     
     MODULE friction_com
@@ -129,9 +135,8 @@
       
       integer nxtT, nytT, nztT
       integer i
-      real pml_vp,pml_fact
-      
-      nfs=2 ! Number of layers above free surface 
+      real pml_vp,pml_fact  
+
 !--------------------
 ! Read the input file
 !--------------------
@@ -153,6 +158,11 @@
         enddo
       endif 
 	  read(11,*) waveT
+#if defined FSPACE
+	  nfs=nabc
+#else
+      nfs=2 ! Number of layers above free surface 
+#endif	
 	  
       nxt=nxtT+2*nabc
       nyt=nytT+nabc
@@ -161,7 +171,7 @@
       omegaM_pml=pml_fact*pml_vp/(2.*dh*(nabc-1))
       nSR=ntfd
       close(11)
-    ! print*, nxt,nyt,nzt,nSR
+     print*, nxt,nyt,nzt,nfs,nSR
 
 !----------------------------
 ! Allocate FD module arrays
@@ -270,7 +280,117 @@
     
 #if defined FVW
     
-    SUBROUTINE forwardspecialTPV104()
+    SUBROUTINE forwardspecialTPV103()
+!   Setup of dynamic parameters for TPV103 benchmark
+    USE inversion_com
+    USE fd3dparam_com
+    USE friction_com
+    USE pml_com
+    IMPLICIT NONE
+
+    integer i,j,k
+    real dum
+    real wfx,wfz, trans, fringe, f0ini, v0ini, a0ini, bini, d0h, fwini, vw0ini, vwdeltaini, vini,RRini
+    real Tini, Snini, Psiini, BX1, BZ1, hx, hz, hx0t, hz0t
+
+    open(244,FILE='scecmodel.dat')
+    read (244,*) wfx,wfz, hx0t, hz0t, trans, fringe  !polovina sirky zlomu v kmetrech,poloha hypocentra, okraj v metrech
+    read (244,*) f0ini ! 
+    read (244,*) v0ini ! 
+    read (244,*) a0ini !
+    read (244,*) bini !
+    read (244,*) d0h ! 
+    read (244,*) fwini ! 
+    read (244,*) vw0ini !
+    read (244,*) vwdeltaini !
+    read (244,*) vini !
+    read (244,*) Tini ! 
+    read (244,*) Snini ! 
+    read (244,*) perturb
+    read (244,*) RRini
+    read (244,*) TT2
+    striniZ=0.
+    close(244)
+    
+    RR2 = RRini*RRini
+    Sn=Snini
+    uini=vini
+    wini=0.
+    f0=f0ini
+    v0=v0ini
+    b=bini
+    strinixI=Tini
+    striniX=Tini
+    fw=fwini
+    
+    hx0 = hx0t + fringe + real(nabc)*dh
+    hz0 = hz0t + fringe + real(nabc)*dh
+    print*,hx0,hz0
+    striniZ=0.
+    do k=1,nzt
+      do i = 1,nxt
+
+        Dc(i,k)=d0h
+        hx = real(i)*dh
+        hz = real(k)*dh
+        if ( abs(hx - hx0) >= wfx + trans) then
+          BX1 = 0.
+        elseif (( abs(hx - hx0) > wfx ) .AND. (abs(hx - hx0) < wfx + trans)) then
+          BX1 = 0.5*(1+tanh(trans/(abs(hx - hx0) - wfx - trans) + trans/(abs(hx - hx0) - wfx)))
+        else
+          BX1 = 1.
+        endif
+        
+        if ( abs(hz - hz0) >= wfz + trans) then
+          BZ1 = 0.
+        elseif (( abs(hz - hz0) > wfz ) .AND. (abs(hz - hz0) < wfz + trans)) then
+          BZ1 = 0.5*(1+tanh(trans/(abs(hz - hz0) - wfz - trans) + trans/(abs(hz - hz0) - wfz)))
+        else
+          BZ1 = 1.
+        endif
+        
+        !print *, BX*BZ
+        a(i,k) = a0ini + a0ini*(1.-BX1*BZ1)
+        vw(i,k) = vw0ini + vwdeltaini*(1.-BX1*BZ1) 
+        !strinix(i,k) = Sn*(f0-(b-a(i,k))*log(2*vini/v0ini))
+        psi(i,k) = a(i,k)*(log((2*v0ini/(2*vini))) + log(sinh(striniX(i,k)/(a(i,k)*Sn))))
+
+      enddo
+    enddo
+   
+    do k=1,nzt
+      do i = 1,nxt
+
+        hx = real(i)*dh +dh/2.
+        hz = real(k)*dh +dh/2.
+        if ( abs(hx - hx0) >= wfx + trans) then
+          BX1 = 0.
+        elseif (( abs(hx - hx0) > wfx ) .AND. (abs(hx - hx0) < wfx + trans)) then
+          BX1 = 0.5*(1+tanh(trans/(abs(hx - hx0) - wfx - trans) + trans/(abs(hx - hx0) - wfx)))
+        else
+          BX1 = 1.
+        endif
+        
+        if ( abs(hz - hz0) >= wfz + trans) then
+          BZ1 = 0.
+        elseif (( abs(hz - hz0) > wfz ) .AND. (abs(hz - hz0) < wfz + trans)) then
+          BZ1 = 0.5*(1+tanh(trans/(abs(hz - hz0) - wfz - trans) + trans/(abs(hz - hz0) - wfz)))	
+        else
+          BZ1 = 1.
+        endif
+        
+        !print *, BX*BZ
+        aX(i,k) = a0ini + a0ini*(1.-BX1*BZ1)
+        vwX(i,k) = vw0ini + vwdeltaini*(1.-BX1*BZ1) 
+        !strinix(i,k) = Sn*(f0-(b-a(i,k))*log(2*vini/v0ini))
+        psiX(i,k)=aX(i,k)*(log((2*v0/(2*uini))) + log(sinh(striniX(i,k)/(aX(i,k)*Sn))))
+        bX(i,k)=bini
+      enddo
+    enddo
+
+    END SUBROUTINE
+	
+	SUBROUTINE forwardspecialTPV104()
 !   Setup of dynamic parameters for TPV104 benchmark
     USE inversion_com
     USE fd3dparam_com

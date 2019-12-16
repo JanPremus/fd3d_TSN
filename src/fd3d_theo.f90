@@ -49,6 +49,7 @@
 !-------------------------------------------------------
 !   initialize arrays
 !-------------------------------------------------------
+
       allocate(u1(nxt,nyt,nzt),v1(nxt,nyt,nzt),w1(nxt,nyt,nzt))
       allocate(xx(nxt,nyt,nzt),yy(nxt,nyt,nzt),zz(nxt,nyt,nzt),xy(nxt,nyt,nzt),yz(nxt,nyt,nzt),xz(nxt,nyt,nzt))
       allocate(tx(nxt,nzt),tz(nxt,nzt),v1t(nxt,nzt),avdx(nxt,nzt),avdz(nxt,nzt), RFx(nxt,nzt),RFz(nxt,nzt))
@@ -96,7 +97,7 @@
         do k = nabc+1,nzt-nfs
           do i = nabc+1,nxt-nabc
             write(95,*) mu1(i,nysc,k)
-            write(96,'(5E13.5)') T0X(i,k),T0Z(i,k)
+            write(96,'(5E13.5)') T0X(i,k),T0Z(i,k), aZ(i,k)-bZ(i,k), striniX(i,k)
           enddo
         enddo
         close(95)
@@ -170,7 +171,15 @@
 #if defined FVW
       !$ACC      COPYIN (aX,bX,psiX,vwX,aZ,bZ,psiZ,vwZ)&
 #endif
-      !$ACC      COPY (ruptime,sliptime,slipZ,rise,slipX)   
+#if defined FSPACE
+      !$ACC      COPYIN (u51,u52,u53,v51,v52,v53,w51,w52,w53)&
+      !$ACC      COPYIN (xx51,xx52,xx53,yy51,yy52,yy53,zz51,zz52,zz53)&
+      !$ACC      COPYIN (xy51,xy52,xz51,xz52,yz51,yz52)&
+	  !$ACC      COPYIN (omegaxS5,omegayS5,omegazS5) &
+	  !$ACC      COPYIN (omegax5,omegay5,omegaz5) &
+#endif
+      !$ACC      COPY (ruptime,sliptime,slipZ,rise,slipX)
+	  
 	  !, waveU, waveV, waveW)  
 
       !seisU,seisV,seisW  
@@ -200,8 +209,10 @@
         call bnd2d(nxt,nyt,nzt,dt,dh)    !Compute velocities of 2nd order accuracy near fault and apply symmetry in normal component
         call tasu1(nxt,nysc,nzt,dt,dh)   !Compute velocities at fault boundary
         call tasw1(nxt,nysc,nzt,dt,dh)
-        call pml_uvw (nxt,nyt,nzt,dt,dh) !Stress free condition
-        call fuvw(nxt,nyt,nzt-nfs)       !Absorbing condition
+        call pml_uvw (nxt,nyt,nzt,dt,dh) !Absorbing condition
+#if !defined FSPACE
+        call fuvw(nxt,nyt,nzt-nfs)       !Stress free condition
+#endif		
          
 !-------------------------------------------------------------
 !   Stress tick
@@ -211,8 +222,9 @@
         call tasxz(nxt,nysc,nzt,dt,dh)   !Compute stress components at fault boundary
         call tasii(nxt,nysc,nzt,dt,dh)
         call pml_xyz (nxt,nyt,nzt,dt,dh) !Absorbing condition 
+#if !defined FSPACE
         call fres(nxt,nyt,nzt-nfs)       !Stress free condition
-
+#endif	
 !----------------------------------------------------------------
 ! Fault BOUNDARY CONDITION applied in ABSOLUTE STRESS,
 ! not in relative stress, otherwise we get all sort of problems
@@ -245,6 +257,28 @@
         
         !Traction calculation near free surface
         k=nzt-nfs
+#if defined FSPACE
+        _ACC_PARALLEL
+        _ACC_LOOP
+      do i = nabc+1,nxt-nabc
+		  pdz = (c1*(xz(i+1,nysc,k) - xz(i,nysc,k))   +  c2*(xz(i+2,nysc,k) - xz(i-1,nysc,k)))/(2.) + &
+		    (c1*(zz(i,nysc,k+1) - zz(i,nysc,k))   +  c2*(zz(i,nysc,k+2) - zz(i,nysc,k-1)))/(2.) - &
+		    yz(i,nysc-1,k)
+		  avdz(i,k)= damp_s*(pdz - avdz(i,k))
+		  RFz(i,k) = pdz + avdz(i,k)
+		  tz(i,k) = -RFz(i,k) - 0.5*d1(i,nysc,k)*dht*w1(i,nysc,k)
+		  avdz(i,k) = pdz
+		  
+          pdx = (c1*(xx(i,nysc,k)   - xx(i-1,nysc,k)) +  c2*(xx(i+1,nysc,k) - xx(i-2,nysc,k)))/(2.) + &
+		    (c1*(xz(i,nysc,k)   - xz(i,nysc,k-1)) +  c2*(xz(i,nysc,k+1) - xz(i,nysc,k-2)))/(2.) - &
+		    xy(i,nysc-1,k)
+		  avdx(i,k)= damp_s*(pdx - avdx(i,k))
+		  RFx(i,k) = pdx + avdx(i,k)
+		  tx(i,k) = -RFx(i,k) - 0.5*d1(i,nysc,k)*dht*u1(i,nysc,k)
+		  avdx(i,k) = pdx
+	    enddo
+		_ACC_END_PARALLEL
+#else
         _ACC_PARALLEL
         _ACC_LOOP
         do i = nabc+1,nxt-nabc
@@ -272,6 +306,7 @@
           tz(i,nzt-1)=-tz(i,nzt-3)
         enddo
         _ACC_END_PARALLEL
+#endif
 !-------------------------------------------------------------
 !  Apply Boundary Conditions
 !-------------------------------------------------------------
@@ -449,6 +484,34 @@
         ! _ACC_END_PARALLEL
         ! endif
         ! endif      
+#if defined TPV103
+!   Smooth nucleation for the tpv104 benchmark
+        if ((time-dt/2.) <= TT2) then
+        
+          if ((time-dt/2.) < TT2) then
+            GT=exp(((time-dt/2.)-TT2)**2/((time-dt/2.)*((time-dt/2.)-2*TT2)))
+          else
+            GT=1.
+          endif
+          _ACC_PARALLEL
+          _ACC_LOOP_COLLAPSE_2
+          do k = nabc-1,nzt-nfs
+            do i = nabc-1,nxt-nabc
+              hx = real(i)*dh
+              hz = real(k)*dh
+              rr = (hx-hx0)**2 + (hz-hz0)**2
+              if (rr<RR2-dh) then
+                FXZ=exp(rr/(rr-RR2-dh))
+              else
+                FXZ = 0.
+              endif
+              T0X(i,k) = strinixI + perturb*FXZ*GT
+
+            enddo
+          enddo
+          _ACC_END_PARALLEL
+        endif
+#endif
 #if defined TPV104
 !   Smooth nucleation for the tpv104 benchmark
         if ((time-dt/2.) <= TT2) then
@@ -460,7 +523,7 @@
           endif
           _ACC_PARALLEL
           _ACC_LOOP_COLLAPSE_2
-          do k = nabc-1,nzt-2
+          do k = nabc-1,nzt-nfs
             do i = nabc-1,nxt-nabc
               hx = real(i)*dh
               hz = real(k)*dh
