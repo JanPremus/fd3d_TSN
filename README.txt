@@ -21,26 +21,26 @@ Several examples of the use of the code are shown in the folder examples.
 Amatrice 2016 earthquake - best fitting forward model from dynamic inversion (Gallovic et al., 2019).
 	- Copy all source files into the folder Amatrice2016
 	- Run compile.sh for compiling the code
-	- Run fd3d_pt_CPU_TSN for the simulation
+	- Run fd3d_if_TSN or fd3d_pgi_TSN for the simulation
 
 TPV5 benchmark - One of the community SCEC/USGS Spontaneous Rupture Code Verification Project (http://scecdata.usc.edu/cvws/)
 benchmarks (Harris et al., 2019) - slip weakening friction law with heterogenous traction
 	- Copy all source files into the folder TPV5
 	- Run compile.sh for compiling the code (compiler flags -DSCEC and -DTPV5 are set in the file to properly set up and run the benchmark)
-	- Run fd3d_pt_CPU_TSN for the simulation
+	- Run fd3d_if_TSN or fd3d_pgi_TSN for the simulation
 
 TPV104 benchmark - One of the community SCEC/USGS Spontaneous Rupture Code Verification Project (http://scecdata.usc.edu/cvws/)
 benchmarks (Harris et al., 2019) - fast velocity weakening friction law with heterogenous traction
 	- Copy all source files into the folder TPV104 (compiler flags -DFWV -DSCEC and -DTPV104 are set in the file to properly set up the friction law and run the benchmark)
 	- Run compile.sh for compiling the code
-	- Run fd3d_pt_CPU_TSN for the simulation
+	- Run fd3d_if_TSN or fd3d_pgi_TSN for the simulation
 TPV9 benchmark - One of the community SCEC/USGS Spontaneous Rupture Code Verification Project (http://scecdata.usc.edu/cvws/)
 benchmarks (Harris et al., 2019) - fast velocity weakening friction law with heterogenous traction
 	- Copy all source files into the folder TPV104 (compiler flags -DSCEC and -DTPV9 are set in the file to properly set up the friction law and run the benchmark)
 	- Run compile.sh for compiling the code
-	- Run fd3d_pt_CPU_TSN for the simulation
+	- Run fd3d_if_TSN or fd3d_pgi_TSN for the simulation
 
-Commentary in compile.sh files contains a line to compile the GPU accelerated version. 
+In all examples, PGI compiler version (fd3d_pgi_TSN) is set to GPU acceleration using -acc and -ta=tesla:ccall directives.
 Switching between slip weakening (default) and fast velocity weakening friction is done using compiler flag -DFVW.
 There are several outputs in the folder result:
 	- sliprateX.res, sliprateZ.res - time histories of horizontal and vertical slip rate at all on fault nodes.
