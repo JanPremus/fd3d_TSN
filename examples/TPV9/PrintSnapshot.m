@@ -18,7 +18,7 @@ f(4) = fopen('result\sliprateZ.res');
 TL=floor(T/dt);
 for j=1:4
     for i=1:TL
-        D{j} = fread(f(j),size(1)*size(3),'real*4');
+        D{j} = fread(f(j),size(1)*size(3),'real*8');
         D{j} = reshape(D{j}(1:size(1)*size(3)),[size(1) size(3)]);
 
     end
