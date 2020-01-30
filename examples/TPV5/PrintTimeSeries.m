@@ -16,10 +16,10 @@ fclose(f);
 PX=floor(nx*1000/dh);
 PZ=floor(nz*1000/dh);
 
-f(1) = fopen('result\shearstressX.res');
-f(2) = fopen('result\shearstressZ.res');
-f(3) = fopen('result\sliprateX.res');
-f(4) = fopen('result\sliprateZ.res');
+f(1) = fopen('result/shearstressX.res');
+f(2) = fopen('result/shearstressZ.res');
+f(3) = fopen('result/sliprateX.res');
+f(4) = fopen('result/sliprateZ.res');
 
 for j=1:4
     for i=1:NT

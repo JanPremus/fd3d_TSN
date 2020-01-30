@@ -10,10 +10,10 @@ str = fgetl(f);
 dt = sscanf(str,'%f',1);
 fclose(f);
 
-f(1) = fopen('result\shearstressX.res');
-f(2) = fopen('result\shearstressZ.res');
-f(3) = fopen('result\sliprateX.res');
-f(4) = fopen('result\sliprateZ.res');
+f(1) = fopen('result/shearstressX.res');
+f(2) = fopen('result/shearstressZ.res');
+f(3) = fopen('result/sliprateX.res');
+f(4) = fopen('result/sliprateZ.res');
 
 TL=floor(T/dt);
 for j=1:4
