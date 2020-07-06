@@ -1148,7 +1148,7 @@
           ferr = 10.
           j = 0
           jmax=100
-          do while (ferr>1e-10)
+          do while (abs(ferr)>1e-10)
             j = j+1
             fw =  vtilde + cdelta*uw + sinh(uw)*v0*exp(-psiX(i,k)/aX(i,k))
             dfw = cdelta + cosh(uw)*v0*exp(-psiX(i,k)/aX(i,k))
@@ -1212,7 +1212,7 @@
           ferr = 10.
           j = 0
           jmax=100
-          do while (ferr>1e-10)
+          do while (abs(ferr)>1e-10)
             j = j+1
             fw =  vtilde + cdelta*uw + sinh(uw)*v0*exp(-psiZ(i,k)/aZ(i,k))
             dfw = cdelta + cosh(uw)*v0*exp(-psiZ(i,k)/aZ(i,k))
