@@ -9,7 +9,7 @@
 D_MACRO=' -DSCEC -DTPV5'
 SRC_FILES='fd3d_init.f90 fd3d_deriv.f90 fd3d_theo.f90 dynamicsolver.f90'
 
-PFC=pgfortran
+PFC=nvfortran
 PFC_OPTS='-fast -Mpreprocess -r8 -acc -ta=tesla:ccall -ofd3d_pgi_TSN'
 # PGI target-accelerator/processor flags: -acc -ta=tesla:ccall -ta=multicore -ta=host -tp=haswell -tp=skylake -mavx512f
 # PGI informational flags: -Minfo=accel -Mcuda=ptxinfo
