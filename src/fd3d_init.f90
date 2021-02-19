@@ -539,10 +539,10 @@
     USE friction_com
     USE medium_com
     IMPLICIT NONE
-    REAL,PARAMETER:: x0=15.e3,z0=6.e3,a=10.e3,b=4.e3,phi=0.,xn=17.e3,zn=6.e3,rn=1.5e3
+    !REAL,PARAMETER:: x0=15.e3,z0=6.e3,a=10.e3,b=4.e3,phi=0.,xn=17.e3,zn=6.e3,rn=1.5e3
     real hx0, hz0, h1x0, h1z0, h2x0, h2z0, hdelta, T0, T0n, sn, mus, mud, d0h
     real x,z,rr,DL,DW, muso, T0h1, T0h2
-    integer i,j,k,no0,j2
+    integer i,j,k,no0,j2, AA, BB
     real dum
     real d_zone, vlow_zone
 
@@ -554,12 +554,14 @@
     read (244,*) mus, muso !staticke treni, staticke treni na okraji
     read (244,*) mud !dynamicke treni
     read (244,*) d0h ! kriticky slip
-    read (244,*) d_zone, vlow_zone ! sirka zlomove zony, pokles elastickeho modulu ve zlomove zone
+    !read (244,*) d_zone, vlow_zone ! sirka zlomove zony, pokles elastickeho modulu ve zlomove zone
     close(244)
-    striniZ=0.
+	
+	striniZ=0.
     coh=0.
-    do k=1,nzt-2
-        do i = 1,nxt
+	
+    do i = 1,nxt
+      do k=1,nzt-2
         striniX(i,k)=T0
 
           if ((((real(i)-1.)*dh-hx0>= -hdelta/2.0) .and. ((real(i)-1.)*dh-hx0 <= hdelta/2.0)) &
@@ -581,7 +583,7 @@
           Dc(i,k)=d0h
         enddo
     enddo
-    
+
     do k=no0+1,nzt-2
       do i = no0+1,nxt-no0
         peak_xz(i,k)=sn*mus
@@ -600,17 +602,17 @@
     enddo
 
     !Zlomova zona
-    j2=0
-    do while (j2*dh<d_zone)
-      j=nyt-j2
-      do k=1,nzt-2
-        do i=1,nxt
-          lam1(i,j,k)=(1-vlow_zone)**2*lam1(i,j,k)
-          mu1(i,j,k)=(1-vlow_zone)**2*mu1(i,j,k)
-        enddo
-      enddo
-    j2=j2+1
-    enddo
+    !j2=0
+    !do while (j2*dh<d_zone)
+    !  j=nyt-j2
+    !  do k=1,nzt-2
+    !    do i=1,nxt
+    !      lam1(i,j,k)=(1-vlow_zone)**2*lam1(i,j,k)
+    !      mu1(i,j,k)=(1-vlow_zone)**2*mu1(i,j,k)
+    !    enddo
+    !  enddo
+    !j2=j2+1
+    !enddo
     
     END SUBROUTINE
 
@@ -643,8 +645,8 @@
     coh=1.e6
 
     striniX=0.
-    do k=2,nzt-2
-      do i = 1,nxt
+    do i = 1,nxt
+      do k=2,nzt-2
         sigma_n=sn*dh*(real(nzt-2-k))
         peak_xz(i,k)=sigma_n*muso
         dyn_xz(i,k) = sigma_n*mud
@@ -687,17 +689,17 @@
     enddo
 
     !Zlomova zona
-    j2=0
-    do while (j2*dh<d_zone)
-      j=nyt-j2
-      do k=1,nzt-2
-        do i=1,nxt
-          lam1(i,j,k)=(1-vlow_zone)**2*lam1(i,j,k)
-          mu1(i,j,k)=(1-vlow_zone)**2*mu1(i,j,k)
-        enddo
-      enddo
-    j2=j2+1
-    enddo
+ !   j2=0
+  !  do while (j2*dh<d_zone)
+   !   j=nyt-j2
+    !  do k=1,nzt-2
+    !    do i=1,nxt
+     !     lam1(i,j,k)=(1-vlow_zone)**2*lam1(i,j,k)
+      !    mu1(i,j,k)=(1-vlow_zone)**2*mu1(i,j,k)
+    !    enddo
+    !  enddo
+!    j2=j2+1
+ !   enddo
     
     END SUBROUTINE
     
@@ -731,8 +733,8 @@
     coh=1.e6
 
     striniZ=0.
-    do k=2,nzt-2
       do i = 1,nxt
+    do k=2,nzt-2
         sigma_n=sn*dh*(real(nzt-2-k)+0.5)
         peak_xz(i,k)=sigma_n*muso
         dyn_xz(i,k) = sigma_n*mud
@@ -766,17 +768,17 @@
     enddo
 
     !Zlomova zona
-    j2=0
-    do while (j2*dh<d_zone)
-      j=nyt-j2
-      do k=1,nzt-2
-        do i=1,nxt
-          lam1(i,j,k)=(1-vlow_zone)**2*lam1(i,j,k)
-          mu1(i,j,k)=(1-vlow_zone)**2*mu1(i,j,k)
-        enddo
-      enddo
-    j2=j2+1
-    enddo
+ !   j2=0
+  !  do while (j2*dh<d_zone)
+ !     j=nyt-j2
+ !     do k=1,nzt-2
+ !       do i=1,nxt
+ !         lam1(i,j,k)=(1-vlow_zone)**2*lam1(i,j,k)
+ !         mu1(i,j,k)=(1-vlow_zone)**2*mu1(i,j,k)
+ !       enddo
+ !     enddo
+ !   j2=j2+1
+ !   enddo
     
     END SUBROUTINE
 #endif
