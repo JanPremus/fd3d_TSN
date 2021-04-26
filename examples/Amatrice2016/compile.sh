@@ -10,10 +10,10 @@ D_MACRO=' -DDIPSLIP'
 SRC_FILES='fd3d_init.f90 fd3d_deriv.f90 fd3d_theo.f90 dynamicsolver.f90'
 
 PFC=nvfortran
-PFC_OPTS='-fast -Mpreprocess -r8 -acc -ta=tesla:ccall -ofd3d_pgi_TSN'
-# PGI target-accelerator/processor flags: -acc -ta=tesla:ccall -ta=multicore -ta=host -tp=haswell -tp=skylake -mavx512f
-# PGI informational flags: -Minfo=accel -Mcuda=ptxinfo
-# PGI debugging flags: 
+PFC_OPTS='-fast -Mpreprocess -r8 -acc -ta=tesla:ccall -ofd3d_nv_TSN'
+# NV target-accelerator/processor flags: -acc -ta=tesla:ccall -ta=multicore -ta=host -tp=haswell -tp=skylake -mavx512f
+# NV informational flags: -Minfo=accel -Mcuda=ptxinfo
+# NV debugging flags: 
 # PGI environment variables: PGI_ACC_TIME, PGI_ACC_NOTIFY, ACC_NUM_CORES, ACC_BIND
 
 GFC=gfortran-9
